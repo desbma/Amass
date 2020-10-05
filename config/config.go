@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -281,6 +282,21 @@ func AcquireConfig(dir, file string, config *Config) error {
 			}
 		}
 	}
+
+	// On Unix systems, fallback on system config directory
+	if runtime.GOOS != "windows" {
+		var system_cfg_dir = "/etc/amass"
+		finfo, err := os.Stat(system_cfg_dir)
+		if err == nil && finfo.IsDir() {
+			file := filepath.Join(system_cfg_dir, "config.ini")
+
+			err = config.LoadSettings(file)
+			if err == nil {
+				return nil
+			}
+		}
+	}
+
 	return err
 }
 
